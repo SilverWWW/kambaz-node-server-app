@@ -3,32 +3,32 @@ import ModulesDao from "./dao.js";
 export default function ModulesRoutes(app, db) {
   const dao = ModulesDao(db);
 
-  const findModulesForCourse = (req, res) => {
+  const findModulesForCourse = async (req, res) => {
     const { courseId } = req.params;
-    const modules = dao.findModulesForCourse(courseId);
+    const modules = await dao.findModulesForCourse(courseId);
     res.json(modules);
   };
 
-  const createModuleForCourse = (req, res) => {
+  const createModuleForCourse = async (req, res) => {
     const { courseId } = req.params;
     const module = {
       ...req.body,
       course: courseId,
     };
-    const newModule = dao.createModule(module);
+    const newModule = await dao.createModule(module);
     res.json(newModule);
   };
 
-  const deleteModule = (req, res) => {
+  const deleteModule = async (req, res) => {
     const { moduleId } = req.params;
-    dao.deleteModule(moduleId);
+    await dao.deleteModule(moduleId);
     res.sendStatus(200);
   };
 
-  const updateModule = (req, res) => {
+  const updateModule = async (req, res) => {
     const { moduleId } = req.params;
     const moduleUpdates = req.body;
-    const module = dao.updateModule(moduleId, moduleUpdates);
+    const module = await dao.updateModule(moduleId, moduleUpdates);
     res.json(module);
   };
 

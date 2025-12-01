@@ -1,41 +1,44 @@
+import model from "./model.js";
 import { v4 as uuidv4 } from "uuid";
 
 export default function UsersDao(db) {
+  // MongoDB functions
   const createUser = (user) => {
-    const newUser = { ...user, _id: uuidv4() };
-    db.users = [...db.users, newUser];
-    return newUser;
+    const userWithoutId = { ...user };
+    delete userWithoutId._id;
+    const newUser = { ...userWithoutId, _id: uuidv4() };
+    return model.create(newUser);
   };
 
-  const findAllUsers = () => db.users;
+  const findAllUsers = async () => await model.find();
 
-  const findUserById = (userId) => db.users.find((user) => user._id === userId);
+  const findUserById = async (userId) => await model.findById(userId);
 
-  const findUserByUsername = (username) => db.users.find((user) => user.username === username);
+  const findUserByUsername = async (username) => await model.findOne({ username: username });
 
-  const findUserByCredentials = (username, password) =>
-    db.users.find((user) => user.username === username && user.password === password);
+  const findUserByCredentials = async (username, password) => await model.findOne({ username, password });
 
-  const updateUser = (userId, userUpdates) => {
-    const user = db.users.find((u) => u._id === userId);
-    if (!user) {
-      return null;
-    }
-    const updatedUser = { ...user, ...userUpdates };
-    db.users = db.users.map((u) => (u._id === userId ? updatedUser : u));
-    return updatedUser;
+  const findUsersByRole = async (role) => await model.find({ role: role });
+
+  const findUsersByPartialName = async (partialName) => {
+    const regex = new RegExp(partialName, "i"); // 'i' makes it case-insensitive
+    return await model.find({
+      $or: [{ firstName: { $regex: regex } }, { lastName: { $regex: regex } }],
+    });
   };
 
-  const deleteUser = (userId) => {
-    db.users = db.users.filter((u) => u._id !== userId);
-  };
+  const updateUser = async (userId, user) => await model.updateOne({ _id: userId }, { $set: user });
 
-  const findUsersEnrolledInCourse = (courseId) => {
-    const { users, enrollments } = db;
+  const deleteUser = async (userId) => await model.findByIdAndDelete(userId);
+
+  // Legacy function - still uses in-memory db for enrollments
+  const findUsersEnrolledInCourse = async (courseId) => {
+    const { enrollments } = db;
     const enrolledUserIds = enrollments
       .filter((enrollment) => enrollment.course === courseId)
       .map((enrollment) => enrollment.user);
-    return users.filter((user) => enrolledUserIds.includes(user._id));
+    const users = await model.find({ _id: { $in: enrolledUserIds } });
+    return users;
   };
 
   return {
@@ -44,6 +47,8 @@ export default function UsersDao(db) {
     findUserById,
     findUserByUsername,
     findUserByCredentials,
+    findUsersByRole,
+    findUsersByPartialName,
     updateUser,
     deleteUser,
     findUsersEnrolledInCourse,
