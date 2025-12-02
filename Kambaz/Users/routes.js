@@ -5,8 +5,8 @@ export default function UserRoutes(app, db) {
 
   const createUser = async (req, res) => {
     const currentUser = req.session["currentUser"];
-    if (!currentUser || currentUser.role !== "FACULTY") {
-      res.status(403).json({ message: "Only faculty can create users" });
+    if (!currentUser || (currentUser.role !== "FACULTY" && currentUser.role !== "ADMIN")) {
+      res.status(403).json({ message: "Only faculty and admins can create users" });
       return;
     }
     const user = await dao.findUserByUsername(req.body.username);
@@ -20,8 +20,8 @@ export default function UserRoutes(app, db) {
 
   const deleteUser = async (req, res) => {
     const currentUser = req.session["currentUser"];
-    if (!currentUser || currentUser.role !== "FACULTY") {
-      res.status(403).json({ message: "Only faculty can delete users" });
+    if (!currentUser || (currentUser.role !== "FACULTY" && currentUser.role !== "ADMIN")) {
+      res.status(403).json({ message: "Only faculty and admins can delete users" });
       return;
     }
     const status = await dao.deleteUser(req.params.userId);
@@ -62,7 +62,7 @@ export default function UserRoutes(app, db) {
     const { userId } = req.params;
     const userUpdates = req.body;
     
-    if (!currentUser || (currentUser._id !== userId && currentUser.role !== "FACULTY")) {
+    if (!currentUser || (currentUser._id !== userId && currentUser.role !== "FACULTY" && currentUser.role !== "ADMIN")) {
       res.status(403).json({ message: "Unauthorized to update this user" });
       return;
     }
