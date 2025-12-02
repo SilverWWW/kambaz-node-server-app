@@ -12,7 +12,7 @@ import ModulesRoutes from "./Kambaz/Modules/routes.js";
 import AssignmentsRoutes from "./Kambaz/Assignments/routes.js";
 import EnrollmentsRoutes from "./Kambaz/Enrollments/routes.js";
 
-const CONNECTION_STRING = process.env.DATABASE_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kambaz";
+const CONNECTION_STRING = process.env.DATABASE_CONNECTION_STRING ||  "mongodb://127.0.0.1:27017/kambaz";
 mongoose.connect(CONNECTION_STRING);
 
 const app = express();
@@ -23,19 +23,23 @@ app.use(
   })
 );
 
+const isDevelopment = !process.env.SERVER_ENV || process.env.SERVER_ENV === "development";
+
 const sessionOptions = {
   secret: process.env.SESSION_SECRET || "kambaz",
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    sameSite: isDevelopment ? "lax" : "none",
+    secure: !isDevelopment,
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  },
 };
 
-if (process.env.SERVER_ENV !== "development") {
+if (!isDevelopment) {
   sessionOptions.proxy = true;
-  sessionOptions.cookie = {
-    sameSite: "none",
-    secure: true,
-    domain: process.env.SERVER_URL,
-  };
+  sessionOptions.cookie.domain = process.env.SERVER_URL;
 }
 
 app.use(session(sessionOptions));

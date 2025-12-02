@@ -20,20 +20,36 @@ export default function AssignmentsRoutes(app, db) {
   };
 
   const createAssignmentForCourse = async (req, res) => {
-    const { courseId } = req.params;
-    const assignment = {
-      ...req.body,
-      course: courseId,
-    };
-    const newAssignment = await dao.createAssignment(assignment);
-    res.json(newAssignment);
+    try {
+      const { courseId } = req.params;
+      const assignment = {
+        ...req.body,
+        course: courseId,
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
+        availableDate: req.body.availableDate ? new Date(req.body.availableDate) : null,
+      };
+      const newAssignment = await dao.createAssignment(assignment);
+      res.json(newAssignment);
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+      res.status(500).json({ error: "Failed to create assignment" });
+    }
   };
 
   const updateAssignment = async (req, res) => {
-    const { assignmentId } = req.params;
-    const assignmentUpdates = req.body;
-    const assignment = await dao.updateAssignment(assignmentId, assignmentUpdates);
-    res.json(assignment);
+    try {
+      const { assignmentId } = req.params;
+      const assignmentUpdates = {
+        ...req.body,
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
+        availableDate: req.body.availableDate ? new Date(req.body.availableDate) : null,
+      };
+      const assignment = await dao.updateAssignment(assignmentId, assignmentUpdates);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error updating assignment:", error);
+      res.status(500).json({ error: "Failed to update assignment" });
+    }
   };
 
   const deleteAssignment = async (req, res) => {

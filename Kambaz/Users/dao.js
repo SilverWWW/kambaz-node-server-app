@@ -2,7 +2,6 @@ import model from "./model.js";
 import { v4 as uuidv4 } from "uuid";
 
 export default function UsersDao(db) {
-  // MongoDB functions
   const createUser = (user) => {
     const userWithoutId = { ...user };
     delete userWithoutId._id;
@@ -21,7 +20,7 @@ export default function UsersDao(db) {
   const findUsersByRole = async (role) => await model.find({ role: role });
 
   const findUsersByPartialName = async (partialName) => {
-    const regex = new RegExp(partialName, "i"); // 'i' makes it case-insensitive
+    const regex = new RegExp(partialName, "i");
     return await model.find({
       $or: [{ firstName: { $regex: regex } }, { lastName: { $regex: regex } }],
     });
@@ -31,7 +30,6 @@ export default function UsersDao(db) {
 
   const deleteUser = async (userId) => await model.findByIdAndDelete(userId);
 
-  // Legacy function - still uses in-memory db for enrollments
   const findUsersEnrolledInCourse = async (courseId) => {
     const { enrollments } = db;
     const enrolledUserIds = enrollments
