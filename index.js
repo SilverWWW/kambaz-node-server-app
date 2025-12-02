@@ -16,10 +16,21 @@ const CONNECTION_STRING = process.env.DATABASE_CONNECTION_STRING ||  "mongodb://
 mongoose.connect(CONNECTION_STRING);
 
 const app = express();
+const allowedOrigins = process.env.CLIENT_URL 
+  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+  : ["http://localhost:3000"];
+
 app.use(
   cors({
     credentials: true,
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS: Origin ${origin} not allowed`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
   })
 );
 
@@ -39,7 +50,6 @@ const sessionOptions = {
 
 if (!isDevelopment) {
   sessionOptions.proxy = true;
-  sessionOptions.cookie.domain = process.env.SERVER_URL;
 }
 
 app.use(session(sessionOptions));
